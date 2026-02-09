@@ -25,10 +25,9 @@
   max-width: 420px;
 }
 
-/* Jumping bear */
-.bear {
-  font-size: 60px;
-  margin-bottom: 10px;
+/* Jumping teddy GIF */
+.bear img {
+  width: 110px;
   animation: jump 1s infinite ease-in-out;
 }
 
@@ -66,6 +65,7 @@ button {
   left: 20%;
   top: 40%;
   transform: translate(-50%, -50%) scale(1);
+  z-index: 3;
 }
 
 #noBtn {
@@ -75,6 +75,7 @@ button {
   left: 75%;
   top: 40%;
   transform: translate(-50%, -50%);
+  z-index: 3;
 }
 
 .balloon {
@@ -90,14 +91,15 @@ button {
   100% { transform: translateY(-15vh) scale(1.2); }
 }
 
+/* Overlay popup */
 #overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 5;
+  z-index: 10;
   padding: 20px;
 }
 
@@ -108,7 +110,7 @@ button {
   border-radius: 20px;
   text-align: center;
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
   animation: pop 0.25s ease;
 }
 
@@ -129,11 +131,26 @@ button {
   width: 100%;
 }
 
+/* Confetti canvas */
+#confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
   </style>
 </head>
 <body>
+  <!-- Background music -->
+  <audio id="music" loop>
+    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a73467.mp3" type="audio/mpeg">
+  </audio><canvas id="confetti"></canvas>
+
   <div class="container">
-    <div class="bear">🧸❤️</div>
+    <div class="bear">
+      <img src="https://media.tenor.com/6Xg4zN7Y7YcAAAAi/teddy-bear-love.gif" alt="teddy bear" />
+    </div>
     <h1>Natasha, will you be my Valentine?</h1>
     <div class="buttons" id="buttonArea">
       <button id="yesBtn">Yes</button>
@@ -147,6 +164,7 @@ button {
     const overlay = document.getElementById("overlay");
     const popupContent = document.getElementById("popupContent");
     const buttonArea = document.getElementById("buttonArea");
+    const music = document.getElementById("music");
 
     const noMessages = [
       "Are you sure? 🧸😢",
@@ -163,16 +181,13 @@ button {
       const areaRect = buttonArea.getBoundingClientRect();
       const btnWidth = noBtn.offsetWidth;
       const btnHeight = noBtn.offsetHeight;
-
       const x = Math.random() * (areaRect.width - btnWidth);
       const y = Math.random() * (areaRect.height - btnHeight);
-
       noBtn.style.left = x + "px";
       noBtn.style.top = y + "px";
       noBtn.style.transform = "none";
     }
 
-    // NO button click
     noBtn.addEventListener("click", () => {
       const message = noMessages[Math.min(noClickCount, noMessages.length - 1)];
 
@@ -185,21 +200,18 @@ button {
       document.getElementById("closeBtn").addEventListener("click", closePopup);
 
       noClickCount++;
-
-      // Grow YES button
       yesScale += 0.15;
       yesBtn.style.transform = `translate(-50%, -50%) scale(${yesScale})`;
-
-      // Move NO button after click
       moveNoButton();
     });
 
-    // YES button click
     yesBtn.addEventListener("click", () => {
+      startCelebration();
+
       overlay.style.display = "flex";
       popupContent.innerHTML = `
-        <h2>I knew you would say YES! ❤️🥰</h2>
-        <button id="closeBtn">Close</button>
+        <h2>I knew you would say YES! ❤️🥰<br><br>You just made me the happiest person alive 💖</h2>
+        <button id="closeBtn">Aww ❤️</button>
       `;
 
       document.getElementById("closeBtn").addEventListener("click", closePopup);
@@ -209,7 +221,7 @@ button {
       overlay.style.display = "none";
     }
 
-    // Floating heart balloons
+    // Floating hearts
     function createBalloon() {
       const balloon = document.createElement("div");
       balloon.className = "balloon";
@@ -217,10 +229,44 @@ button {
       balloon.style.left = Math.random() * 100 + "vw";
       balloon.style.animationDuration = 4 + Math.random() * 4 + "s";
       document.body.appendChild(balloon);
-
       setTimeout(() => balloon.remove(), 8000);
     }
-
     setInterval(createBalloon, 600);
+
+    // Confetti celebration
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let confetti = [];
+
+    function startCelebration() {
+      music.play().catch(() => {});
+
+      confetti = Array.from({ length: 150 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 6 + 2,
+        d: Math.random() * 50
+      }));
+
+      animateConfetti();
+    }
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ff4d6d";
+
+      confetti.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+        ctx.fill();
+        c.y += Math.cos(c.d) + 2;
+        if (c.y > canvas.height) c.y = -10;
+      });
+
+      requestAnimationFrame(animateConfetti);
+    }
   </script></body>
 </html>
